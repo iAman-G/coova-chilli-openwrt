@@ -10,7 +10,7 @@ jobs:
     - name: Setup build tools
       run: |
         sudo apt update
-        sudo apt install -y build-essential git wget file rsync unzip zlib1g-dev python3 python3-distutils
+        sudo apt install -y build-essential git wget file rsync unzip zlib1g-dev python3 python3-venv
     - name: Download OpenWrt SDK
       run: |
         wget https://downloads.openwrt.org/releases/23.05.4/targets/ramips/mt76x8/openwrt-sdk-23.05.4-ramips-mt76x8_gcc-12.3.0_musl.Linux-x86_64.tar.xz
@@ -20,12 +20,6 @@ jobs:
     - name: Add OpenWISP coova-chilli package
       run: |
         git clone https://github.com/openwisp/coova-chilli-openwrt.git sdk/package/coova-chilli
-    - name: Update and install feeds
-      run: |
-        cd sdk
-        ./scripts/feeds update -a
-        ./scripts/feeds install libjson-c
-        ./scripts/feeds install coova-chilli
     - name: Enable JSON interface and build
       run: |
         cd sdk
