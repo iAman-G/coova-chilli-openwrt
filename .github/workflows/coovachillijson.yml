@@ -6,6 +6,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
     - name: Setup build tools
       run: |
@@ -19,15 +20,16 @@ jobs:
         rm openwrt-sdk-*.tar.xz
         mv openwrt-sdk-* sdk
 
-    - name: Clone OpenWISP coova-chilli
+    - name: Add coova-chilli package (OpenWISP fork)
       run: |
-        git clone https://github.com/openwisp/coova-chilli-openwrt.git sdk/package/coova-chilli
+        git clone https://github.com/openwisp/coova-chilli-openwrt.git
+        mv coova-chilli-openwrt/coova-chilli sdk/package/coova-chilli
 
     - name: Inject libjson-c dependency
       run: |
         sed -i 's/DEPENDS:=/DEPENDS:=+libjson-c /' sdk/package/coova-chilli/Makefile
 
-    - name: Configure and build coova-chilli
+    - name: Enable JSON interface and build
       run: |
         cd sdk
         echo "CONFIG_PACKAGE_coova-chilli=m" >> .config
@@ -35,7 +37,7 @@ jobs:
         make defconfig
         make package/coova-chilli/compile V=s
 
-    - name: Upload artifact
+    - name: Upload .ipk
       uses: actions/upload-artifact@v4
       with:
         name: coova-chilli-ipk
