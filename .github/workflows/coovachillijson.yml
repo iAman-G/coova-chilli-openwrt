@@ -6,43 +6,48 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
-    - name: Setup build tools
+    - name: Install dependencies
       run: |
         sudo apt update
-        sudo apt install -y build-essential git wget file rsync unzip zlib1g-dev python3 python3-venv
+        sudo apt install -y build-essential git wget unzip python3 python3-distutils python3-venv libncurses-dev zlib1g-dev gawk gettext libssl-dev xsltproc rsync
 
-    - name: Download OpenWrt SDK
+    - name: Clone OpenWrt buildroot
       run: |
-        wget https://downloads.openwrt.org/releases/23.05.4/targets/ramips/mt76x8/openwrt-sdk-23.05.4-ramips-mt76x8_gcc-12.3.0_musl.Linux-x86_64.tar.xz
-        tar -xf openwrt-sdk-*.tar.xz
-        rm openwrt-sdk-*.tar.xz
-        mv openwrt-sdk-* sdk
+        git clone https://git.openwrt.org/openwrt/openwrt.git
+        cd openwrt
+        git checkout v23.05.4
 
     - name: Add coova-chilli package
       run: |
-        git clone https://github.com/openwisp/coova-chilli-openwrt.git tmp-coova
-        mkdir -p sdk/package/coova-chilli
-        cp -r tmp-coova/* sdk/package/coova-chilli/
+        cd openwrt/package
+        git clone https://github.com/openwisp/coova-chilli-openwrt.git coova-chilli
 
-    - name: Update and install feeds
+    - name: Configure feeds
       run: |
-        cd sdk
-        echo "src-git packages https://git.openwrt.org/feed/packages.git" > feeds.conf.default
+        cd openwrt
         ./scripts/feeds update -a
-        ./scripts/feeds install libjson-c
+        ./scripts/feeds install -a
 
-    - name: Enable JSON and build coova-chilli
+    - name: Configure build
       run: |
-        cd sdk
+        cd openwrt
         echo "CONFIG_PACKAGE_coova-chilli=m" >> .config
         echo "CONFIG_COOVACHILLI_JSONINTERFACE=y" >> .config
         make defconfig
-        make package/coova-chilli/compile V=s
 
-    - name: Upload artifact
+    - name: Build coova-chilli
+      run: |
+        cd openwrt
+        make -j1 V=s tools/install
+        make -j1 V=s toolchain/install
+        make -j1 V=s target/linux/compile
+        make -j1 V=s package/coova-chilli/compile
+
+    - name: Upload .ipk
       uses: actions/upload-artifact@v4
       with:
         name: coova-chilli-ipk
         path: |
-          sdk/bin/packages/mipsel_24kc/*/coova-chilli_*.ipk
+          openwrt/bin/packages/*/*/coova-chilli_*.ipk
