@@ -1,4 +1,4 @@
-name: Build OpenWRT CoovaChilli with JSON
+name: Build coova-chilli with JSON support
 
 on:
   workflow_dispatch:
@@ -6,37 +6,40 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - name: Install required packages
         run: |
           sudo apt update
           sudo apt install -y build-essential clang flex bison g++ gawk gcc-multilib \
-          g++-multilib gettext git libncurses-dev libssl-dev rsync unzip zlib1g-dev \
-          file wget python3-setuptools python3-dev python-is-python3
+            g++-multilib gettext git libncurses-dev libssl-dev rsync unzip zlib1g-dev \
+            file wget python3-setuptools python3-dev python-is-python3
 
       - name: Download and extract OpenWrt SDK
         run: |
           wget https://downloads.openwrt.org/releases/23.05.4/targets/ramips/mt76x8/openwrt-sdk-23.05.4-ramips-mt76x8_gcc-12.3.0_musl.Linux-x86_64.tar.xz
           tar -xf openwrt-sdk-*.tar.xz
-          rm openwrt-sdk-*.tar.xz
           mv openwrt-sdk-* sdk
 
-      - name: Clone and patch coova-chilli package
+      - name: Clone coova-chilli from OpenWrt packages feed
         run: |
-          git clone https://github.com/coova/coova-chilli.git sdk/package/coova-chilli
-          sed -i '/^CONFIGURE_ARGS/ s|$| \\\n\t--enable-json \\\n\t--with-json-c|' sdk/package/coova-chilli/Makefile
+          git clone https://github.com/openwrt/packages.git
+          mkdir -p sdk/package/coova
+          mv packages/net/coova-chilli sdk/package/coova/
 
-      - name: Prepare CoovaChilli build
+      - name: Configure build with JSON support
         run: |
           cd sdk
-          ./scripts/feeds update -a
-          ./scripts/feeds install -a
           echo "CONFIG_PACKAGE_coova-chilli=m" >> .config
           echo "CONFIG_COOVACHILLI_JSONINTERFACE=y" >> .config
           make defconfig
-          make package/coova-chilli/compile V=s
 
-      - name: Upload built .ipk
+      - name: Build coova-chilli
+        run: |
+          cd sdk
+          make package/coova/chilli/compile V=s
+
+      - name: Upload .ipk
         uses: actions/upload-artifact@v4
         with:
           name: coova-chilli-ipk
