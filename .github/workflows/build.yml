@@ -1,4 +1,4 @@
-name: Build coova-chilli
+name: Build coova-chilli only
 
 on:
   workflow_dispatch:
@@ -7,32 +7,32 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Install dependencies
+      - name: Install required packages
         run: |
           sudo apt update
-          sudo apt install -y build-essential clang flex bison g++ gawk \
-            gcc-multilib g++-multilib gettext git libncurses-dev \
-            libssl-dev python3-pip rsync unzip zlib1g-dev file \
-            python3-setuptools python3-dev python-is-python3
+          sudo apt install -y build-essential clang flex bison g++ gawk gcc-multilib \
+          g++-multilib gettext git libncurses-dev libssl-dev rsync unzip zlib1g-dev \
+          file wget python3-setuptools python3-dev python-is-python3
 
-      - name: Download OpenWrt SDK
+      - name: Download and extract OpenWrt SDK
         run: |
           wget https://downloads.openwrt.org/releases/23.05.4/targets/ramips/mt76x8/openwrt-sdk-23.05.4-ramips-mt76x8_gcc-12.3.0_musl.Linux-x86_64.tar.xz
           tar -xf openwrt-sdk-*.tar.xz
           rm openwrt-sdk-*.tar.xz
           mv openwrt-sdk-* sdk
 
-      - name: Prepare CoovaChilli package
+      - name: Clone coova-chilli package
+        run: |
+          git clone https://github.com/coova/coova-chilli.git sdk/package/coova-chilli
+
+      - name: Prepare CoovaChilli build
         run: |
           cd sdk
-          ./scripts/feeds update base packages
-          ./scripts/feeds install coova-chilli
+          ./scripts/feeds update -a
+          ./scripts/feeds install -a
+          echo "CONFIG_PACKAGE_coova-chilli=m" >> .config
+          echo "CONFIG_COOVACHILLI_JSONINTERFACE=y" >> .config
           make defconfig
-          ./scripts/config -m PACKAGE_coova-chilli
-          ./scripts/config -e CONFIG_COOVACHILLI_JSONINTERFACE
           make package/coova-chilli/compile V=s
 
       - name: Upload built .ipk
@@ -40,6 +40,5 @@ jobs:
         with:
           name: coova-chilli-ipk
           path: |
-            sdk/bin/packages/mipsel_24kc/base/coova-chilli_*.ipk
-            sdk/bin/packages/mipsel_24kc/coova/coova-chilli_*.ipk
+            sdk/bin/packages/mipsel_24kc/*/coova-chilli_*.ipk
             sdk/bin/targets/ramips/mt76x8/packages/coova-chilli_*.ipk
