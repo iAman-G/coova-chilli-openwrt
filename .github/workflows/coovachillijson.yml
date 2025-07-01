@@ -10,29 +10,29 @@ jobs:
     - name: Setup build tools
       run: |
         sudo apt update
-        sudo apt install -y build-essential git wget file rsync unzip zlib1g-dev
-
+        sudo apt install -y build-essential git wget file rsync unzip zlib1g-dev python3 python3-distutils
     - name: Download OpenWrt SDK
       run: |
         wget https://downloads.openwrt.org/releases/23.05.4/targets/ramips/mt76x8/openwrt-sdk-23.05.4-ramips-mt76x8_gcc-12.3.0_musl.Linux-x86_64.tar.xz
         tar -xf openwrt-sdk-*.tar.xz
         rm openwrt-sdk-*.tar.xz
-        mv openwrt-sdk-*/ sdk
-
+        mv openwrt-sdk-* sdk
     - name: Add OpenWISP coova-chilli package
       run: |
         git clone https://github.com/openwisp/coova-chilli-openwrt.git sdk/package/coova-chilli
-
+    - name: Update and install feeds
+      run: |
+        cd sdk
+        ./scripts/feeds update -a
+        ./scripts/feeds install libjson-c
+        ./scripts/feeds install coova-chilli
     - name: Enable JSON interface and build
       run: |
         cd sdk
-        ./scripts/feeds update –a
-        ./scripts/feeds install chilli
         echo "CONFIG_PACKAGE_coova-chilli=m" >> .config
         echo "CONFIG_COOVACHILLI_JSONINTERFACE=y" >> .config
         make defconfig
         make package/coova-chilli/compile V=s
-
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
