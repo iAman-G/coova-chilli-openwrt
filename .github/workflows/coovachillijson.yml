@@ -11,28 +11,38 @@ jobs:
       run: |
         sudo apt update
         sudo apt install -y build-essential git wget file rsync unzip zlib1g-dev python3 python3-venv
+
     - name: Download OpenWrt SDK
       run: |
         wget https://downloads.openwrt.org/releases/23.05.4/targets/ramips/mt76x8/openwrt-sdk-23.05.4-ramips-mt76x8_gcc-12.3.0_musl.Linux-x86_64.tar.xz
         tar -xf openwrt-sdk-*.tar.xz
         rm openwrt-sdk-*.tar.xz
         mv openwrt-sdk-* sdk
-    - name: Download only coova-chilli package
+
+    - name: Clone coova-chilli OpenWISP package (full)
       run: |
-        mkdir -p sdk/package/coova-chilli
-        curl -sL https://raw.githubusercontent.com/openwisp/coova-chilli-openwrt/master/package/coova-chilli/Makefile -o sdk/package/coova-chilli/Makefile
-        curl -sL https://raw.githubusercontent.com/openwisp/coova-chilli-openwrt/master/package/coova-chilli/configure.ac -o sdk/package/coova-chilli/configure.ac
-        curl -sL https://raw.githubusercontent.com/openwisp/coova-chilli-openwrt/master/package/coova-chilli/Makefile.in -o sdk/package/coova-chilli/Makefile.in
+        mkdir -p sdk/package/
+        cd sdk/package/
+        git init
+        git remote add origin https://github.com/openwisp/coova-chilli-openwrt.git
+        git config core.sparseCheckout true
+        echo "package/coova-chilli" >> .git/info/sparse-checkout
+        git pull origin master
+        mv package/coova-chilli ./
+        rm -rf package
+
     - name: Inject libjson-c dependency
       run: |
         sed -i 's/DEPENDS:=/DEPENDS:=+libjson-c /' sdk/package/coova-chilli/Makefile
-    - name: Enable JSON interface and build
+
+    - name: Configure and Build
       run: |
         cd sdk
         echo "CONFIG_PACKAGE_coova-chilli=m" >> .config
         echo "CONFIG_COOVACHILLI_JSONINTERFACE=y" >> .config
         make defconfig
         make package/coova-chilli/compile V=s
+
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
