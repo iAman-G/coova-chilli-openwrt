@@ -9,7 +9,7 @@ jobs:
     name: Build coova-chilli
     steps:
       - name: Checkout repo
-        uses: actions/checkout@4
+        uses: actions/checkout@v3
 
       - name: Install dependencies
         run: |
@@ -37,7 +37,7 @@ jobs:
           make package/coova-chilli/compile -j$(nproc) V=s
 
       - name: Upload compiled .ipk
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: coova-chilli-ipk
           path: sdk/bin/packages/mipsel_24kc/base/coova-chilli_*.ipk
