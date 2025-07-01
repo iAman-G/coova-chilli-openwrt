@@ -20,6 +20,9 @@ jobs:
     - name: Add OpenWISP coova-chilli package
       run: |
         git clone https://github.com/openwisp/coova-chilli-openwrt.git sdk/package/coova-chilli
+    - name: Patch Makefile to add libjson-c dependency
+      run: |
+        sed -i 's/DEPENDS:=/DEPENDS:=+libjson-c /' sdk/package/coova-chilli/Makefile
     - name: Enable JSON interface and build
       run: |
         cd sdk
