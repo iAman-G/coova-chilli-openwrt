@@ -17,9 +17,12 @@ jobs:
         tar -xf openwrt-sdk-*.tar.xz
         rm openwrt-sdk-*.tar.xz
         mv openwrt-sdk-* sdk
-    - name: Add OpenWISP coova-chilli package
+    - name: Download only coova-chilli package
       run: |
-        git clone https://github.com/openwisp/coova-chilli-openwrt.git sdk/package/coova-chilli
+        mkdir -p sdk/package/coova-chilli
+        curl -sL https://raw.githubusercontent.com/openwisp/coova-chilli-openwrt/master/package/coova-chilli/Makefile -o sdk/package/coova-chilli/Makefile
+        curl -sL https://raw.githubusercontent.com/openwisp/coova-chilli-openwrt/master/package/coova-chilli/configure.ac -o sdk/package/coova-chilli/configure.ac
+        curl -sL https://raw.githubusercontent.com/openwisp/coova-chilli-openwrt/master/package/coova-chilli/Makefile.in -o sdk/package/coova-chilli/Makefile.in
     - name: Inject libjson-c dependency
       run: |
         sed -i 's/DEPENDS:=/DEPENDS:=+libjson-c /' sdk/package/coova-chilli/Makefile
