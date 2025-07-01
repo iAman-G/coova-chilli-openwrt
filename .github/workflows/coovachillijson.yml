@@ -25,11 +25,12 @@ jobs:
         git clone https://github.com/openwisp/coova-chilli-openwrt.git
         mv coova-chilli-openwrt/coova-chilli sdk/package/coova-chilli
 
-    - name: Inject libjson-c dependency
+    - name: Modify Makefile for JSON support
       run: |
-        sed -i 's/DEPENDS:=/DEPENDS:=+libjson-c /' sdk/package/coova-chilli/Makefile
+        sed -i '/^DEPENDS/s/$/ +libjson-c/' sdk/package/coova-chilli/Makefile
+        echo -e '\nCONFIG_COOVACHILLI_JSONINTERFACE=y' >> sdk/package/coova-chilli/Config.in
 
-    - name: Enable JSON interface and build
+    - name: Configure and Build
       run: |
         cd sdk
         echo "CONFIG_PACKAGE_coova-chilli=m" >> .config
