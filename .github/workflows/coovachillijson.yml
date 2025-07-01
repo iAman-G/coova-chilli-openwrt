@@ -6,7 +6,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
     - name: Setup build tools
       run: |
@@ -20,26 +19,28 @@ jobs:
         rm openwrt-sdk-*.tar.xz
         mv openwrt-sdk-* sdk
 
-    - name: Clone CoovaChilli and json-c packages
+    - name: Add coova-chilli package
       run: |
         git clone https://github.com/openwisp/coova-chilli-openwrt.git tmp-coova
         mkdir -p sdk/package/coova-chilli
         cp -r tmp-coova/* sdk/package/coova-chilli/
 
-        git clone https://git.openwrt.org/feed/packages.git tmp-packages
-        mkdir -p sdk/package/libs/json-c
-        cp -r tmp-packages/libs/json-c/* sdk/package/libs/json-c/
-
-    - name: Build CoovaChilli with JSON support
+    - name: Update and install feeds
       run: |
         cd sdk
-        echo "CONFIG_PACKAGE_libjson-c=m" >> .config
+        echo "src-git packages https://git.openwrt.org/feed/packages.git" > feeds.conf.default
+        ./scripts/feeds update -a
+        ./scripts/feeds install libjson-c
+
+    - name: Enable JSON and build coova-chilli
+      run: |
+        cd sdk
         echo "CONFIG_PACKAGE_coova-chilli=m" >> .config
         echo "CONFIG_COOVACHILLI_JSONINTERFACE=y" >> .config
         make defconfig
         make package/coova-chilli/compile V=s
 
-    - name: Upload IPK
+    - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
         name: coova-chilli-ipk
