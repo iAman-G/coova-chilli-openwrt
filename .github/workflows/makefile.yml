@@ -1,4 +1,4 @@
-name: Build CoovaChilli with JSON for OpenWrt
+name: Build CoovaChilli with JSON for OpenWrt 23.05.4 (ramips/mt76x8)
 
 on:
   workflow_dispatch:
@@ -27,15 +27,20 @@ jobs:
           tar -xf openwrt-sdk-*.tar.xz -C sdk --strip-components=1
           rm openwrt-sdk-*.tar.xz
 
-      - name: Configure and build CoovaChilli only
+      - name: Configure and build CoovaChilli for OpenWRT
         run: |
           cd sdk
           ./scripts/feeds update -a
           ./scripts/feeds install coova-chilli
-          make defconfig
-          ./scripts/config -d CONFIG_ALL
-          ./scripts/config -m PACKAGE_coova-chilli
-          ./scripts/config -e CONFIG_COOVACHILLI_JSONINTERFACE
+
+          cat <<EOF > .config
+CONFIG_TARGET_ramips=y
+CONFIG_TARGET_ramips_mt76x8=y
+CONFIG_TARGET_ramips_mt76x8_DEVICE_generic=y
+CONFIG_PACKAGE_coova-chilli=m
+CONFIG_COOVACHILLI_JSONINTERFACE=y
+EOF
+
           make defconfig
           make package/coova-chilli/compile -j$(nproc) V=s
 
