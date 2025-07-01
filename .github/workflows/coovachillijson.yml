@@ -1,4 +1,4 @@
-name: Build coova-chilli with JSON support
+name: Build coova-chilli with JSON
 
 on:
   workflow_dispatch:
@@ -6,7 +6,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
       - name: Install required packages
         run: |
@@ -22,28 +21,26 @@ jobs:
           rm openwrt-sdk-*.tar.xz
           mv openwrt-sdk-* sdk
 
-      - name: Clone coova-chilli from OpenWrt packages feed
+      - name: Clone coova-chilli into correct path
         run: |
-          git clone https://github.com/openwrt/packages.git
           mkdir -p sdk/package/coova
-          mv packages/net/coova-chilli sdk/package/coova/
+          git clone https://github.com/coova/coova-chilli.git sdk/package/coova/chilli
 
-      - name: Configure build with JSON support
+      - name: Enable JSON in Makefile
+        run: |
+          sed -i '/^CONFIGURE_ARGS/ s|$| \\\n\t--enable-json \\\n\t--with-json-c|' sdk/package/coova/chilli/Makefile
+
+      - name: Build CoovaChilli
         run: |
           cd sdk
-          echo "CONFIG_PACKAGE_coova-chilli=m" >> .config
+          echo "CONFIG_PACKAGE_coova-chilli=m" > .config
           echo "CONFIG_COOVACHILLI_JSONINTERFACE=y" >> .config
           make defconfig
-
-      - name: Build coova-chilli
-        run: |
-          cd sdk
           make package/coova/chilli/compile V=s
 
-      - name: Upload .ipk
+      - name: Upload built .ipk
         uses: actions/upload-artifact@v4
         with:
-          name: coova-chilli-ipk
+          name: coova-chilli-json
           path: |
             sdk/bin/packages/mipsel_24kc/*/coova-chilli_*.ipk
-            sdk/bin/targets/ramips/mt76x8/packages/coova-chilli_*.ipk
