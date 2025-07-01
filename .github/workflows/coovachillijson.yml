@@ -6,6 +6,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
     - name: Setup build tools
       run: |
@@ -19,17 +20,10 @@ jobs:
         rm openwrt-sdk-*.tar.xz
         mv openwrt-sdk-* sdk
 
-    - name: Clone coova-chilli OpenWISP package (full)
+    - name: Clone OpenWISP coova-chilli
       run: |
-        mkdir -p sdk/package/
-        cd sdk/package/
-        git init
-        git remote add origin https://github.com/openwisp/coova-chilli-openwrt.git
-        git config core.sparseCheckout true
-        echo "package/coova-chilli" >> .git/info/sparse-checkout
-        git pull origin master
-        mv package/coova-chilli ./
-        rm -rf package
+        git clone https://github.com/openwisp/coova-chilli-openwrt.git coova-temp
+        mv coova-temp sdk/package/coova-chilli
 
     - name: Inject libjson-c dependency
       run: |
