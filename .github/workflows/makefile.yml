@@ -23,8 +23,8 @@ jobs:
       - name: Download OpenWrt SDK
         run: |
           wget https://archive.openwrt.org/releases/23.05.4/targets/ramips/mt76x8/openwrt-sdk-23.05.4-ramips-mt76x8_gcc-12.3.0_musl.Linux-x86_64.tar.xz
-          tar -xf openwrt-sdk-*.tar.xz
-          mv openwrt-sdk-* sdk
+          mkdir sdk
+          tar -xf openwrt-sdk-*.tar.xz -C sdk --strip-components=1
 
       - name: Prepare and Build CoovaChilli
         run: |
