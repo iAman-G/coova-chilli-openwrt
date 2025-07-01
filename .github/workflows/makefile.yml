@@ -6,12 +6,12 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    name: Build coova-chilli
+    name: Build coova-chilli only
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
 
-      - name: Install dependencies
+      - name: Install build dependencies
         run: |
           sudo apt update
           sudo apt install -y build-essential clang flex bison g++ gawk \
@@ -25,14 +25,17 @@ jobs:
           wget https://archive.openwrt.org/releases/23.05.4/targets/ramips/mt76x8/openwrt-sdk-23.05.4-ramips-mt76x8_gcc-12.3.0_musl.Linux-x86_64.tar.xz
           mkdir sdk
           tar -xf openwrt-sdk-*.tar.xz -C sdk --strip-components=1
+          rm openwrt-sdk-*.tar.xz
 
-      - name: Prepare and Build CoovaChilli
+      - name: Configure and build CoovaChilli only
         run: |
           cd sdk
           ./scripts/feeds update -a
           ./scripts/feeds install coova-chilli
-          echo "CONFIG_PACKAGE_coova-chilli=m" > .config
-          echo "CONFIG_COOVACHILLI_JSONINTERFACE=y" >> .config
+          make defconfig
+          ./scripts/config -d CONFIG_ALL
+          ./scripts/config -m PACKAGE_coova-chilli
+          ./scripts/config -e CONFIG_COOVACHILLI_JSONINTERFACE
           make defconfig
           make package/coova-chilli/compile -j$(nproc) V=s
 
@@ -40,4 +43,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: coova-chilli-ipk
-          path: sdk/bin/packages/mipsel_24kc/base/coova-chilli_*.ipk
+          path: |
+            sdk/bin/packages/mipsel_24kc/base/coova-chilli_*.ipk
+            sdk/bin/packages/mipsel_24kc/coova/coova-chilli_*.ipk
+            sdk/bin/targets/ramips/mt76x8/packages/coova-chilli_*.ipk
