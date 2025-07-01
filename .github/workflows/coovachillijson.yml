@@ -1,4 +1,4 @@
-name: Build coova-chilli only
+name: Build OpenWRT CoovaChilli with JSON
 
 on:
   workflow_dispatch:
