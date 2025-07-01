@@ -20,25 +20,26 @@ jobs:
         rm openwrt-sdk-*.tar.xz
         mv openwrt-sdk-* sdk
 
-    - name: Add coova-chilli package (OpenWISP fork)
+    - name: Clone CoovaChilli and json-c packages
       run: |
-        git clone https://github.com/openwisp/coova-chilli-openwrt.git
-        mv coova-chilli-openwrt/coova-chilli sdk/package/coova-chilli
+        git clone https://github.com/openwisp/coova-chilli-openwrt.git tmp-coova
+        mkdir -p sdk/package/coova-chilli
+        cp -r tmp-coova/* sdk/package/coova-chilli/
 
-    - name: Modify Makefile for JSON support
-      run: |
-        sed -i '/^DEPENDS/s/$/ +libjson-c/' sdk/package/coova-chilli/Makefile
-        echo -e '\nCONFIG_COOVACHILLI_JSONINTERFACE=y' >> sdk/package/coova-chilli/Config.in
+        git clone https://github.com/openwrt/openwrt.git --depth=1 tmp-openwrt
+        mkdir -p sdk/package/libs/json-c
+        cp -r tmp-openwrt/package/libs/json-c/* sdk/package/libs/json-c/
 
-    - name: Configure and Build
+    - name: Build CoovaChilli with JSON support
       run: |
         cd sdk
+        echo "CONFIG_PACKAGE_libjson-c=m" >> .config
         echo "CONFIG_PACKAGE_coova-chilli=m" >> .config
         echo "CONFIG_COOVACHILLI_JSONINTERFACE=y" >> .config
         make defconfig
         make package/coova-chilli/compile V=s
 
-    - name: Upload .ipk
+    - name: Upload IPK
       uses: actions/upload-artifact@v4
       with:
         name: coova-chilli-ipk
