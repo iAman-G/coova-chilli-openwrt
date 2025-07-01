@@ -27,14 +27,14 @@ jobs:
 
       - name: Prepare CoovaChilli build
         run: |
-        cd sdk
-        ./scripts/feeds update -a
-       ./scripts/feeds install -a
-       echo "CONFIG_PACKAGE_coova-chilli=m" >> .config
-       echo "CONFIG_COOVACHILLI_JSONINTERFACE=y" >> .config
-       make defconfig
-       sed -i '/^CONFIGURE_ARGS/ s|$| \\\n\t--enable-json \\\n\t--with-json-c|' package/coova-chilli/Makefile
-       make package/coova-chilli/compile V=s
+         cd sdk
+         ./scripts/feeds update -a
+         ./scripts/feeds install -a
+         echo "CONFIG_PACKAGE_coova-chilli=m" >> .config
+         echo "CONFIG_COOVACHILLI_JSONINTERFACE=y" >> .config
+         make defconfig
+         sed -i '/^CONFIGURE_ARGS/ s|$| \\\n\t--enable-json \\\n\t--with-json-c|' package/coova-chilli/Makefile
+         make package/coova-chilli/compile V=s
     
       - name: Upload built .ipk
         uses: actions/upload-artifact@v4
