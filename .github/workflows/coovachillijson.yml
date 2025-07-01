@@ -6,7 +6,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
     - name: Setup build tools
       run: |
@@ -22,14 +21,13 @@ jobs:
 
     - name: Clone OpenWISP coova-chilli
       run: |
-        git clone https://github.com/openwisp/coova-chilli-openwrt.git coova-temp
-        mv coova-temp sdk/package/coova-chilli
+        git clone https://github.com/openwisp/coova-chilli-openwrt.git sdk/package/coova-chilli
 
     - name: Inject libjson-c dependency
       run: |
         sed -i 's/DEPENDS:=/DEPENDS:=+libjson-c /' sdk/package/coova-chilli/Makefile
 
-    - name: Configure and Build
+    - name: Configure and build coova-chilli
       run: |
         cd sdk
         echo "CONFIG_PACKAGE_coova-chilli=m" >> .config
