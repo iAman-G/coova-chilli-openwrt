@@ -1,0 +1,54 @@
+name: Build coova-chilli with JSON (OpenWrt SDK x86_64)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Install dependencies
+      run: |
+        sudo apt update
+        sudo apt install -y build-essential unzip git python3 wget file
+
+    - name: Download and extract OpenWrt SDK
+      run: |
+        wget https://downloads.openwrt.org/releases/23.05.3/targets/x86/64/openwrt-sdk-23.05.3-x86-64_gcc-12.3.0_musl.Linux-x86_64.tar.xz
+        tar -xf openwrt-sdk-23.05.3-x86-64_gcc-12.3.0_musl.Linux-x86_64.tar.xz
+        mv $(find . -maxdepth 1 -type d -name "openwrt-sdk-*") sdk
+
+    - name: Add coova-chilli package
+      run: |
+        git clone https://github.com/openwisp/coova-chilli-openwrt.git
+        mv coova-chilli-openwrt sdk/package/coova-chilli
+
+    - name: Configure and build package
+      run: |
+        cd sdk
+        ./scripts/feeds update -a
+        ./scripts/feeds install -a
+
+        echo "CONFIG_PACKAGE_libjson-c=y" >> .config
+        echo "CONFIG_PACKAGE_libuci=y" >> .config
+        echo "CONFIG_PACKAGE_libnl-tiny=y" >> .config
+        echo "CONFIG_PACKAGE_libopenssl=y" >> .config
+        echo "CONFIG_PACKAGE_haserl=y" >> .config
+        echo "CONFIG_PACKAGE_iptables=y" >> .config
+
+        echo "CONFIG_PACKAGE_coova-chilli=m" >> .config
+        echo "CONFIG_COOVACHILLI_JSONINTERFACE=y" >> .config
+        echo "CONFIG_COOVACHILLI_SINGLECONFIG=y" >> .config
+        echo "CONFIG_COOVACHILLI_MINIPORTAL=y" >> .config
+        echo "CONFIG_COOVACHILLI_UCI_SUPPORT=y" >> .config
+        echo "CONFIG_COOVACHILLI_REDIRSSL=y" >> .config
+
+        make defconfig
+        make package/coova-chilli/compile -j$(nproc) V=s
+
+    - name: Upload .ipk
+      uses: actions/upload-artifact@v4
+      with:
+        name: coova-chilli-ipk
+        path: sdk/bin/packages/*/*/coova-chilli_*.ipk
