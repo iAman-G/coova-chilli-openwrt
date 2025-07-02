@@ -15,14 +15,15 @@ jobs:
 
     - name: Clone OpenWrt buildroot
       run: |
-        git clone https://github.com/openwrt/openwrt.git openwrt
+        git clone https://github.com/openwrt/openwrt.git
         cd openwrt
         git checkout v23.05.4
 
-    - name: Clone coova-chilli package
+    - name: Add coova-chilli package
       run: |
-        git clone https://github.com/openwisp/coova-chilli-openwrt.git tmp-coova
-        cp -r tmp-coova package/coova-chilli
+        cd openwrt
+        mkdir -p package
+        git clone https://github.com/openwisp/coova-chilli-openwrt.git package/coova-chilli
 
     - name: Configure and build
       run: |
