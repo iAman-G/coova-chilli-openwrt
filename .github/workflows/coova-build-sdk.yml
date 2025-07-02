@@ -19,7 +19,6 @@ jobs:
         tar -xf openwrt-sdk-23.05.4-ramips-mt76x8_gcc-12.3.0_musl.Linux-x86_64.tar.xz
         mv $(find . -maxdepth 1 -type d -name "openwrt-sdk-*") sdk
 
-
     - name: Add coova-chilli package
       run: |
         git clone https://github.com/openwisp/coova-chilli-openwrt.git
@@ -30,9 +29,21 @@ jobs:
         cd sdk
         ./scripts/feeds update -a
         ./scripts/feeds install -a
+
         echo "CONFIG_PACKAGE_libjson-c=y" >> .config
+        echo "CONFIG_PACKAGE_libuci=y" >> .config
+        echo "CONFIG_PACKAGE_libnl-tiny=y" >> .config
+        echo "CONFIG_PACKAGE_libopenssl=y" >> .config
+        echo "CONFIG_PACKAGE_haserl=y" >> .config
+        echo "CONFIG_PACKAGE_iptables=y" >> .config
+
         echo "CONFIG_PACKAGE_coova-chilli=m" >> .config
         echo "CONFIG_COOVACHILLI_JSONINTERFACE=y" >> .config
+        echo "CONFIG_COOVACHILLI_SINGLECONFIG=y" >> .config
+        echo "CONFIG_COOVACHILLI_MINIPORTAL=y" >> .config
+        echo "CONFIG_COOVACHILLI_UCI_SUPPORT=y" >> .config
+        echo "CONFIG_COOVACHILLI_REDIRSSL=y" >> .config
+
         make defconfig
         make package/coova-chilli/compile -j$(nproc) V=s
 
