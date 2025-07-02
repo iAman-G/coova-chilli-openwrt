@@ -1,0 +1,42 @@
+name: Build coova-chilli with JSON (OpenWrt SDK)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Install dependencies
+      run: |
+        sudo apt update
+        sudo apt install -y build-essential unzip git python3 wget file
+
+    - name: Download and extract OpenWrt SDK
+      run: |
+        wget https://downloads.openwrt.org/releases/23.05.4/targets/ramips/mt76x8/openwrt-sdk-23.05.4-ramips-mt76x8_gcc-12.3.0_musl.Linux-x86_64.tar.xz
+        tar -xf openwrt-sdk-23.05.4-ramips-mt76x8_gcc-12.3.0_musl.Linux-x86_64.tar.xz
+        mv openwrt-sdk-23.05.4-ramips-mt76x8* sdk
+
+    - name: Add coova-chilli package
+      run: |
+        git clone https://github.com/openwisp/coova-chilli-openwrt.git
+        mv coova-chilli-openwrt sdk/package/coova-chilli
+
+    - name: Configure and build package
+      run: |
+        cd sdk
+        ./scripts/feeds update -a
+        ./scripts/feeds install -a
+        echo "CONFIG_PACKAGE_libjson-c=y" >> .config
+        echo "CONFIG_PACKAGE_coova-chilli=m" >> .config
+        echo "CONFIG_COOVACHILLI_JSONINTERFACE=y" >> .config
+        make defconfig
+        make package/coova-chilli/compile -j$(nproc) V=s
+
+    - name: Upload .ipk
+      uses: actions/upload-artifact@v4
+      with:
+        name: coova-chilli-ipk
+        path: sdk/bin/packages/*/*/coova-chilli_*.ipk
